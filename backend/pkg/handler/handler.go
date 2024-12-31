@@ -1,14 +1,15 @@
 package handler
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"rfid_handler/pkg/state"
+	"rfid_handler/pkg/utils"
 	"runtime"
 	"strconv"
 	"time"
 )
+
 func clearConsole() {
 	
 	if runtime.GOOS == "windows" {
@@ -18,12 +19,6 @@ func clearConsole() {
 		
 		fmt.Print("\x1b[H\x1b[2J")
 	}
-}
-
-func sendJSONResponse(w http.ResponseWriter, statusCode int, message string) {
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(statusCode)
-    json.NewEncoder(w).Encode(map[string]string{"message": message})
 }
 
 func HandleUpdateCollected(s *state.AppState) http.HandlerFunc {
@@ -37,7 +32,7 @@ func HandleUpdateCollected(s *state.AppState) http.HandlerFunc {
 		
 		id := r.URL.Query().Get("id")
 		if id == "" {
-            sendJSONResponse(w, http.StatusBadRequest, "ID is required")
+            utils.SendJSONResponse(w, http.StatusBadRequest, "ID is required")
 			return
 		}
 
@@ -55,19 +50,20 @@ func HandleUpdateCollected(s *state.AppState) http.HandlerFunc {
 
 		
 		if item == nil {
-			sendJSONResponse(w, http.StatusNotFound,"Item not found")
+			utils.SendJSONResponse(w, http.StatusNotFound,"Item not found")
 			return
 		}
 
 		
 		if item.Collected {
-			sendJSONResponse(w, http.StatusConflict, "Item is already collected")
+			utils.SendJSONResponse(w, http.StatusConflict, "Item is already collected")
 			return
 		}
 
 		
+		now := time.Now()
 		item.Collected = true
-		item.CollectionDate = time.Now()
+		item.CollectionDate = &now
 		
 		collectedCount := 0
 		for _, itm := range s.Items {
@@ -82,6 +78,6 @@ func HandleUpdateCollected(s *state.AppState) http.HandlerFunc {
 		fmt.Println(consoleUpdate)
 
 		
-        sendJSONResponse(w, http.StatusOK, fmt.Sprintf("Item ID: %s was marked as collected.", id))
+        utils.SendJSONResponse(w, http.StatusOK, fmt.Sprintf("Item ID: %s was marked as collected.", id))
 	}
 }

@@ -11,7 +11,7 @@ func main() {
     appState := state.NewAppState()
 
     http.HandleFunc("/rfid/collect", handler.HandleUpdateCollected(appState))
-
+    http.HandleFunc("/rfid/status",state.HandleGetStatus(appState))
     log.Println("Server starting on port 8080...")
     if err := http.ListenAndServe(":8080", nil); err != nil {
         log.Fatalf("Failed to start server: %v", err)
